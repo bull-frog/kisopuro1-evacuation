@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>ポイントデータの作成</title>
+	<style>
+
+		* {
+			user-select: none;
+			margin: 0;
+			padding: 0;
+		}
+
+		#map {
+			width: 3478px;
+			height: 3011px;
+			background-image: url(./shibuya_google_map.png);
+		}
+
+		.dot {
+			width: 10px;
+			height: 10px;
+			background-color: red;
+			border: 2px solid white;
+			border-radius: 50%;
+			transform: translate(-50%, -50%);
+			position: absolute;
+		}
+	</style>
+
+	
+</head>
+
+<body>
+
+	<div id="map">
+		
+	</div>
+
+	<p><input id="upload-file" type="file" accept="text/csv"></p>
+	<p><button onclick="exportData()">Download CSV</button></p>
+
+	<script>
+
+		// [[経度,緯度]の形式で保管]
+		let dots = [];
+
+		// 地図要素
+		const map = document.getElementById("map");
+
+		// CSVを読み込む
+		const input = document.getElementById("upload-file");
+		input.addEventListener("change", (e) => {
+			const file = e.target.files[0]
+			const reader = new FileReader();
+			reader.onload = () => {
+				dots = [];
+				csvList = reader.result.split("\n");
+				for (let i = 1; i < csvList.length; i++) {
+					if (!csvList[i]) {
+						continue;
+					}
+					let coord = csvList[i].split(",");
+					let xy = coordToXY(coord[0], coord[1]);
+					dots.push(coord);
+					displayDot(xy[0], xy[1]);
+				}
+			}
+			reader.readAsText(file);
+		});
+
+		// クリックされた場所に点をうつ
+		map.addEventListener("click", (e) => {
+			const x = e.pageX;
+			const y = e.pageY;
+			dots.push(xyToCoord(x, y));
+			displayDot(x, y);
+		});
+
+		// CSVにて書き出し
+		function exportData() {
+			let result = "lon,lat\n";
+			for (let item of dots) {
+				result += `${item[0]},${item[1]}\n`;
+			}
+			result = result.substring(0, result.length - 1);
+			
+			let title = prompt("題名を入力してください", "交差点");
+			let blob = new Blob([result], {type: "text/csv"});
+			let link = document.createElement("a");
+			link.href = URL.createObjectURL(blob);
+			link.download = `${title}_${(new Date()).getTime()}.csv`;
+			link.click();
+		}
+
+		// 経度緯度とXY座標を変換
+		function coordToXY(lon, lat) {
+			return [(lon - 139.694) / 0.008 * 3478, (35.665 - lat) / 0.007 * 3011];
+		}
+
+		function xyToCoord(x, y) {
+			return [x / 3478 * 0.008 + 139.694, -y / 3011 * 0.007 + 35.665];
+		}
+
+		// 点を描画
+		function displayDot(x, y) {
+			console.log(`displayDot(${x}, ${y})`);
+			let dotElem = document.createElement("div");
+			dotElem.classList.add("dot");
+			dotElem.style.top = `${y}px`;
+			dotElem.style.left = `${x}px`;
+			map.appendChild(dotElem);
+		}
+		
+	</script>
+</body>
+
+</html>

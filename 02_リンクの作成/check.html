@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>リンクのチェック</title>
+		<meta charset="UTF-8">
+		<style>
+
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			#map {
+				width: 3478px;
+				height: 3011px;
+				background-image: url(shibuya_google_map.png);
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+			
+			#overlay {
+				width: 3478px;
+				height: 3011px;
+				position: absolute;
+				top: 0;
+				left: 0;
+				z-index: 10;
+			}
+
+			#wrapper {
+				width: 3478px;
+				height: 3011px;
+			}
+
+			.dot {
+				width: 10px;
+				height: 10px;
+				background-color: red;
+				border: 2px solid white;
+				border-radius: 50%;
+				transform: translate(-50%, -50%);
+				position: absolute;
+			}
+
+			.dot:hover {
+				background-color: yellow;
+				border: 2px solid red;
+				cursor: pointer;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="wrapper">
+			<canvas id="map" width="3478" height="3011">
+
+			</canvas>
+			
+			<div id="overlay">
+				
+			</div>
+		</div>
+
+		<p><input id="upload-file" type="file" accept="text/csv"></p>
+		<p><button onclick="exportData()">Download CSV</button></p>
+
+		<script src="points2.js"></script>
+		<script>
+
+			// [[id, 経度, 緯度]の形式で保管]
+			// points.jsで管理
+
+			// キャンバス
+			const map = document.getElementById("map");
+			const context = map.getContext("2d");
+			context.strokeStyle = "black";
+
+			// オーバーレイ
+			const overlay = document.getElementById("overlay");
+
+			// 経度緯度とXY座標を変換
+			function coordToXY(lon, lat) {
+				return [(lon - 139.694) / 0.008 * 3478, (35.665 - lat) / 0.007 * 3011];
+			}
+
+			function xyToCoord(x, y) {
+				return [x / 3478 * 0.008 + 139.694, -y / 3011 * 0.007 + 35.665];
+			}
+
+			// 点を描画
+			function displayDot(x, y, id) {
+				let dotElem = document.createElement("div");
+				dotElem.nodeId = id;
+				dotElem.classList.add("dot");
+				dotElem.style.top = `${y}px`;
+				dotElem.style.left = `${x}px`;
+				overlay.appendChild(dotElem);
+			}
+
+			// CSVを読み込む
+			const input = document.getElementById("upload-file");
+			input.addEventListener("change", (e) => {
+				const file = e.target.files[0]
+				const reader = new FileReader();
+				reader.onload = () => {
+					links = [];
+					csvList = reader.result.split("\n");
+					for (let i = 1; i < csvList.length; i++) {
+						if (!csvList[i]) {
+							continue;
+						}
+						let link = csvList[i].split(",");
+						links.push(link);
+						displayLine(...link);
+					}
+				}
+				reader.readAsText(file);
+			});
+
+			// リンク（[ [startId, endId], ... ]の形で保存）
+			let links = [];
+
+			for (const dot of points) {
+				const xy = coordToXY(dot[1], dot[2]);
+				displayDot(...xy, dot[0]);
+			}
+
+			// 直線を描画
+			function displayLine(startId, endId) {
+				const startDot = points[startId - 1];
+				const endDot = points[endId - 1];
+				const startXY = coordToXY(startDot[1], startDot[2]);
+				const endXY = coordToXY(endDot[1], endDot[2]);
+				context.beginPath();
+				context.moveTo(...startXY);
+				context.lineTo(...endXY);
+				context.closePath();
+    			context.stroke();
+			}
+
+			
+			for (const link of links) {
+				displayLine(...link);
+			}
+			
+
+			// 点クリック時の処理
+			overlay.addEventListener("click", (e) => {
+				console.log(e.target.nodeId);
+			});
+
+			// CSVにて書き出し
+			function exportData() {
+				let result = "startId,endId\n";
+				for (let link of links) {
+					result += `${link[0]},${link[1]}\n`;
+				}
+				result = result.substring(0, result.length - 1);
+				
+				let title = prompt("題名を入力してください", "リンク");
+				let blob = new Blob([result], {type: "text/csv"});
+				let linkObj = document.createElement("a");
+				linkObj.href = URL.createObjectURL(blob);
+				linkObj.download = `${title}_${(new Date()).getTime()}.csv`;
+				linkObj.click();
+			}
+
+		</script>
+	</body>
+</html>
