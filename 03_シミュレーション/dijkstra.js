@@ -1,11 +1,11 @@
 /**
  * 
- * @param {Array} links リンクコストを格納した配列[startId, endId, distance]
+ * @param {Array} linksWithDistances リンクコストを格納した配列[startId, endId, distance]
  * @param {number} numberOfNodes ノードの個数
  * @param {number} startPoint 始点ノードのID
  * @returns {{distances: Array<number>, nextPointOnRoute: Array<number>}}
  */
-exports.dijkstra = function (links, numberOfNodes, startPoint) {
+exports.dijkstra = function (linksWithDistances, numberOfNodes, startPoint) {
 
 	// 各点が訪問済みかどうかを示す配列
 	const visited = Array(numberOfNodes).fill(false, 0);
@@ -29,10 +29,10 @@ exports.dijkstra = function (links, numberOfNodes, startPoint) {
 		visited[currentPoint] = true;
 
 		// 現在地に隣接する各点の最短距離を更新
-		for (let i = 0; i < links.length; i++) {
+		for (let i = 0; i < linksWithDistances.length; i++) {
 
 			let neighborPoint;
-			let link = links[i]
+			let link = linksWithDistances[i]
 
 			if (link[0] == currentPoint) {
 				neighborPoint = link[1];
@@ -55,7 +55,7 @@ exports.dijkstra = function (links, numberOfNodes, startPoint) {
 		let nextPoint;
 		let nearsetNeighborDistance = Infinity;
 
-		for (let i = 0; i < links.length; i++) {
+		for (let i = 0; i < linksWithDistances.length; i++) {
 			if (!visited[i] && distances[i] < nearsetNeighborDistance) {
 				nextPoint = i;
 				nearsetNeighborDistance = distances[i];
