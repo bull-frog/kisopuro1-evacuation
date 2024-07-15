@@ -12,7 +12,7 @@ exports.Agent = class Agent {
 
 	/**
 	 * 属性と初期位置を指定し、新しいエージェントを生成する
-	 * @param {Number} id エージェントのID（連番）
+	 * @param {Number} id エージェントのID
 	 * @param {Number} age 年齢に応じてエージェントの移動距離を変えることを考える
 	 * @param {Number} initalStreetNumber 初期にいる道のID
 	 * @param {Number} initialPositionOnStreet 初期の道における位置（小さい番号側が0~大きい番号側が1の範囲で指定）
@@ -29,14 +29,24 @@ exports.Agent = class Agent {
 		this.finalDestination = finalDestination;
 		this.familiarityWithShibuya = familiarityWithShibuya;
 
-		// エージェントは道のどこかに置かれるので、セットアップする
+		/**
+		 * エージェントが交差点にいるときは、その交差点のID。いないときは-1
+		 * @type {Number}
+		 */
 		this.currentNodeNumber = -1;
+
+		// エージェントは道のどこかに置かれるので、セットアップする。
+		
 		// 今いる道の両側の交差点のIDを取得
+		/**
+		 * @type {{id: number, startNodeId: number, endNodeId: number, distance: number}}
+		 */
 		const currentStreet = linksWithDistances[initalStreetNumber];
-		const upperNode = currentStreet[0];
-		const lowerNode = currentStreet[1];
-		// どちらの交差点に近いかを判定し、次の行き先を決める
-		if ((initialPositionOnStreet < 0.5 && routes[this.finalDestination][this.upperNode] == lowerNode) || initialPositionOnStreet >= 0.5) {
+		const upperNode = currentStreet.startNodeId;
+		const lowerNode = currentStreet.endNodeId;
+
+		// 目的地に向かうため、最初はどちらの交差点に向かうのかを決める。
+		if ((initialPositionOnStreet < 0.5 && routes[this.finalDestination][upperNode] == lowerNode) || (initialPositionOnStreet >= 0.5 && routes[this.finalDestination][lowerNode] != upperNode)) {
 			this.nextNodeNumber = lowerNode;
 			this.walkDirection = 1;
 		} else {
@@ -45,16 +55,6 @@ exports.Agent = class Agent {
 		}
 	}
 
-	/**
-	 * エージェントが交差点にいるときは、その交差点のID
-	 * いないときは-1
-	 */
-	currentNodeNumber = -1;
-
-	/**
-	 * エージェントが次に向かう交差点のID、どこにも向かわないときは-1
-	 */
-	nextNodeNumber = -1;
 
 	/**
 	 * タイムステップごとに行う処理
@@ -67,10 +67,9 @@ exports.Agent = class Agent {
 			// 次に向かう交差点を決定
 			this.nextNodeNumber = routes[this.finalDestination][this.currentNodeNumber];
 
-			// 次に向かう交差点が決まったら、道に移動
+			// 次に向かう交差点が決まったら、道に移動。
 			let nextLink = linksFromNodes[this.currentNodeNumber].find(link => link.destination === this.nextNodeNumber);
-			// console.log(`nextLink: ${nextLink}`);
-			this.currentStreetNumber = nextLink.link;
+			this.currentStreetNumber = nextLink.linkId;
 			this.currentPositionOnStreet = nextLink.up ? 1 : 0;
 			this.walkDirection = nextLink.up ? -1 : 1;
 			this.currentNodeNumber = -1;
@@ -79,15 +78,12 @@ exports.Agent = class Agent {
 		// エージェントが道にいる場合
 		else if (this.currentStreetNumber != -1) {
 
-			
-			// 歩を進める。とりあえず、3km/hで計算する。
-			
-			// linksWithDistancesから、今いる道の長さを取得する
-			const currentStreetLength = linksWithDistances[this.currentStreetNumber][2];
-
 			// 1時間あたりの歩く距離（m）
 			// ToDo: 密度や年齢に応じて歩く速度を変える
 			let walkingDistancePerHour = 3000;
+
+			// linksWithDistancesから、今いる道の長さを取得する
+			const currentStreetLength = linksWithDistances[this.currentStreetNumber].distance;
 
 			// timeInterval(s)ごとに、currentPositionOnStreetを増減する
 			this.currentPositionOnStreet += (walkingDistancePerHour / 3600 * timeInterval / currentStreetLength * this.walkDirection);
@@ -126,10 +122,23 @@ exports.Agent = class Agent {
  * 所与の分布に沿ってエージェントを生成する
  * @param {Array<Agent>} agents エージェントを格納する配列
  * @param {Array<{id: number, startNodeId: number, endNodeId: number, distance: number, width: number}>} linksWithDistances リンクの情報 (id, startNodeId, endNodeId, length, width)
+ * @param {Array<Array<Number>>} routes ダイクストラ法で得られた経路情報
  */
-exports.generateAgents = function(agents, linksWithDistances) {
+exports.generateAgents = function(agents, linksWithDistances, routes) {
 
-	// とりあえず、道の長さに従って等密度で分布させる
+	// agentsを初期化
+	agents = [];
+
+	// とりあえず、道の長さに従って等密度で分布させる。目的地も仮に、全員がハチ公前（ID: 187）に向かうものとする。
+	const totalDistanceOfLinks = linksWithDistances.reduce((acc, link) => acc + link.distance, 0);
+	const totalPopulation = 50000;
+
+	linksWithDistances.forEach((link, index) => {
+		const numberOfAgents = Math.round(totalPopulation * link.distance / totalDistanceOfLinks);
+		for (let i = 0; i < numberOfAgents; i++) {
+			agents.push(new exports.Agent(agents.length, 20, index, Math.random(), 187, Math.round(Math.random() + 1), routes, linksWithDistances));
+		}
+	}
 
 
 }
