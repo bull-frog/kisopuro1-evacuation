@@ -11,7 +11,12 @@ exports.loadCSV = function(filename, dropHead) {
 	const lines = csvText.split("\n");
 	const result = [];
 	for (let i = dropHead; i < lines.length; i++) {
-		result.push(lines[i].split(","));
+		result.push(lines[i].split(",").map(value => {
+			// valueを数値に変換できるなら変換
+			if (!isNaN(value)) {
+				return Number(value);
+			}
+		}));
 	}
 	return result;
 };

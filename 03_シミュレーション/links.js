@@ -10,6 +10,23 @@ exports.calculateDistance = function (nodes, links) {
 	return links.map((link) => [link[0], link[1], getDistanceBetweenNodes(nodes[link[0]], nodes[link[1]])]);
 };
 
+/**
+ * ノードごとに、そのノードから伸びているリンクの情報を持つ配列を作成
+ * @typedef {[id:number, lon:number, lat:number]} Node
+ * @typedef {[startId:number, endId:number]} Link
+ * @param {Array<Node>} nodes
+ * @param {Array<Link} links
+ * @returns ノードごとに、そのノードから伸びているリンクの情報を持つ配列 [[{link: number, destination: number, up: boolean}, ...], ...]
+ */
+exports.createLinksFromNodes = function (nodes, links) {
+	const linksFromNodes = new Array(nodes.length).fill(null).map(() => []);
+	links.forEach((link, index) => {
+		linksFromNodes[link[0]].push({ link: index, destination: link[1], up: false });
+		linksFromNodes[link[1]].push({ link: index, destination: link[0], up: true });
+	});
+	return linksFromNodes;
+}
+
 
 /**
  * 2地点間の距離 (m) を計算する関数。AIに聞いた。

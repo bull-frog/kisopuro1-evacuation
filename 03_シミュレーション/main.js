@@ -1,17 +1,22 @@
-const calculateDistance = require("./calculateDistance");
-const loadCSV = require("./loadCSV");
-const dijkstra = require("./dijkstra");
+const calculateDistance = require("./links").calculateDistance;
+const createLinksFromNodes = require("./links").createLinksFromNodes;
+const loadCSV = require("./loadCSV").loadCSV;
+const dijkstra = require("./dijkstra").dijkstra;
+const Agent = require("./agent").Agent;
 
-const links = loadCSV.loadCSV("links.csv", 0);
-const nodes = loadCSV.loadCSV("nodes.csv", 0);
-const linksWithDistances = calculateDistance.calculateDistance(nodes, links);
+const links = loadCSV("links.csv", 0);
+const nodes = loadCSV("nodes.csv", 0);
+const linksWithDistances = calculateDistance(nodes, links);
+
+const linksFromNodes = createLinksFromNodes(nodes, links);
+console.log(linksFromNodes);
 
 // ダイクストラ法で、各始点から全ての点への経路上の次の点を二次元配列に格納。
 // nextNode[destination][origin]で、o→dへの次の点が得られる。
 // すでに到達している場合は -1
 const routes = [];
 for (let i = 0; i < nodes.length; i++) {
-	routes.push(dijkstra.dijkstra(linksWithDistances, nodes.length, i).nextPointOnRoute);
+	routes.push(dijkstra(linksWithDistances, nodes.length, i).nextPointOnRoute);
 }
 
 console.log("経路探索完了");
