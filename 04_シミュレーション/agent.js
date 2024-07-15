@@ -1,60 +1,17 @@
-const { loadCSVWithSpecifiedFilename } = require("./loadCSV");
-
-const calculateDistance = require("./links").calculateDistance;
-const createLinksFromNodes = require("./links").createLinksFromNodes;
-const loadCSV = require("./loadCSV").loadCSV;
-const dijkstra = require("./dijkstra").dijkstra;
-const Agent = require("./agent").Agent;
-
-// const Street = require("./street");
-
-
-// ノード・リンクのデータを読み込み、前処理を行う
+/**
+ * シミュレーションの時間間隔（秒）
+ */
+const timeInterval = 10;
 
 /**
- * @typedef {[id: number, startId: number, endId: number, width: number]} Link
- * @type {Array<Link>}
+ * エージェントのクラス
+ * エージェントは、渋谷の道を歩く人間を表す
+ * エージェントは、年齢、現在いる道のID、現在いる道における位置、最終目的地のID、渋谷の道に対する知識度を持つ
  */
-const links = loadCSV("links-with-width.csv", 0);
-
-/**
- * @typedef {[id: number, lon: number, lat: number]} Node
- * @type {Array<Node}
- */
-const nodes = loadCSV("nodes.csv", 0);
-
-/**
- * リンクの距離情報を持つオブジェクトの配列
- * @type {Array<{id: number, startNodeId: number, endNodeId: number, distance: number, width: number}>}
- */
-const linksWithDistances = calculateDistance(nodes, links); // 距離を計算
-
-/**
- * そのノードから出るリンクのID、行き先、方向を持ったオブジェクトの配列
- * @type {Array<Array<{linkId: number, destination: number, up: boolean}>>}
- */
-const linksFromNodes = createLinksFromNodes(nodes, links);
-
-/**
- * 各始点から全ての点への経路上の次の点を格納した二次元配列。
- * routes[目的地][現在地]で、現在地から目的地へ行く最短経路上の次の点が得られる。
- * 目的地 = 現在地の場合には、-1が格納される。
- * @type {Array<Array<number>>}
- */
-const routes = [];
-for (let i = 0; i < nodes.length; i++) {
-	routes.push(dijkstra(linksWithDistances, nodes.length, i).nextPointOnRoute);
-}
-
-
-// エージェントの生成（これは明日やりたい、、）
-// とりあえず別ファイルにくくり出しておく
-
-
-class Agent {
+exports.Agent = class Agent {
 
 	/**
-	 * コンストラクタ
+	 * 属性と初期位置を指定し、新しいエージェントを生成する
 	 * @param {Number} id エージェントのID（連番）
 	 * @param {Number} age 年齢に応じてエージェントの移動距離を変えることを考える
 	 * @param {Number} initalStreetNumber 初期にいる道のID
@@ -62,7 +19,7 @@ class Agent {
 	 * @param {Number} finalDestination 最終目的地のID、決まっていない場合は-1
 	 * @param {Number} familiarityWithShibuya 渋谷の道をよく知っているかどうか（数字で指定、とりあえず1-2）（将来的にはこれに応じて使用するルートを変えることも考える）
 	 * @param {Array<Array<Number>>} routes ダイクストラ法で得られた経路情報
-	 * @param {Array<{id: number, startNodeId: number, endNodeId: number, distance: number}>} linksWithDistances リンクの情報（[startId, endId, length]）
+	 * @param {Array<{id: number, startNodeId: number, endNodeId: number, distance: number, width: number}>} linksWithDistances リンクの情報 (id, startNodeId, endNodeId, length, width)
 	 */
 	constructor(id, age, initalStreetNumber, initialPositionOnStreet, finalDestination, familiarityWithShibuya, routes, linksWithDistances) {
 		this.id = id;
@@ -163,3 +120,16 @@ class Agent {
 	
 
 };
+
+
+/**
+ * 所与の分布に沿ってエージェントを生成する
+ * @param {Array<Agent>} agents エージェントを格納する配列
+ * @param {Array<{id: number, startNodeId: number, endNodeId: number, distance: number, width: number}>} linksWithDistances リンクの情報 (id, startNodeId, endNodeId, length, width)
+ */
+exports.generateAgents = function(agents, linksWithDistances) {
+
+	// とりあえず、道の長さに従って等密度で分布させる
+
+
+}

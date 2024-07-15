@@ -1,10 +1,10 @@
 /**
  * リンクの長さを計算し返す
  * @typedef {[id: number, lon: number, lat: number]} Node
- * @typedef {[id: number, startId: number, endId: number]} Link
+ * @typedef {[id: number, startId: number, endId: number, width: number]} Link
  * @param {Array<Node>} nodes - ノードの配列
  * @param {Array<Link>} links - リンクの配列
- * @returns {Array<{id: number, startNodeId: number, endNodeId: number, distance: number}>} - リンクの情報を持つオブジェクトの配列
+ * @returns {Array<{id: number, startNodeId: number, endNodeId: number, distance: number, width: number}>} - リンクの情報を持つオブジェクトの配列
  */
 exports.calculateDistance = function (nodes, links) {
 	return links.map((link) => {
@@ -12,7 +12,8 @@ exports.calculateDistance = function (nodes, links) {
 			id: link[0],
 			startNodeId: link[1],
 			endNodeId: link[2],
-			distance: getDistanceBetweenNodes(nodes[link[1]], nodes[link[2]])
+			distance: getDistanceBetweenNodes(nodes[link[1]], nodes[link[2]]),
+			width: link[3]
 		}
 	});
 };
@@ -20,7 +21,7 @@ exports.calculateDistance = function (nodes, links) {
 /**
  * ノードごとに、そのノードから伸びているリンクの情報を持つ配列を作成
  * @typedef {[id: number, lon: number, lat: number]} Node
- * @typedef {[id: number, startId: number, endId: number]} Link
+ * @typedef {[id: number, startId: number, endId: number, width: number]} Link
  * @param {Array<Node>} nodes - ノードの配列
  * @param {Array<Link>} links - リンクの配列
  * @returns {Array<Array<{linkId: number, destination: number, up: boolean}>>} - ノードごとのリンク情報を持つ配列

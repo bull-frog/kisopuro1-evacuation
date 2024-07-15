@@ -20,4 +20,3 @@ exports.loadCSV = function(filename, dropHead) {
 	}
 	return result;
 };
-
