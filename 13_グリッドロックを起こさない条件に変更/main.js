@@ -119,4 +119,4 @@ for (let t = 0; t < 200; t++) {
 
 // シミュレーションの記録を出力する
 const csv = streetDensity.map(row => `${row[0]},${row[1]},${row[2]},${row[3]},${row[4]},"${row[5]}",${row[6]}`).join("\n");
-fs.writeFileSync("hachiko-0.csv", "time,linkId,startId,endId,width,wkt,populationDensity\n" + csv);
+fs.writeFileSync("hachiko-20.csv", "time,linkId,startId,endId,width,wkt,populationDensity\n" + csv);
