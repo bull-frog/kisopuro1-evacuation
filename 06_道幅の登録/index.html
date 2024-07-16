@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>道幅の設定</title>
+		<meta charset="UTF-8">
+		<style>
+
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			#map {
+				width: 3478px;
+				height: 3011px;
+				background-image: url(shibuya_google_map.png);
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+			
+			#overlay {
+				width: 3478px;
+				height: 3011px;
+				position: absolute;
+				top: 0;
+				left: 0;
+				z-index: 10;
+			}
+
+			#wrapper {
+				width: 3478px;
+				height: 3011px;
+			}
+
+			.line {
+				position: absolute;
+				border: none;
+				background-color: blue;
+			}
+
+			.line:hover {
+				background-color: yellow;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="wrapper">
+			<canvas id="map" width="3478" height="3011">
+
+			</canvas>
+			
+			<div id="overlay">
+				
+			</div>
+		</div>
+
+		<p><input id="upload-file" type="file" accept="text/csv"></p>
+		<p><button onclick="exportData()">Download CSV</button></p>
+
+		<script src="nodes.js"></script>
+		<script>
+
+			// Using EPSG:8994
+
+			// 縮尺(m/px)
+			const scale = 722.76 / 3478;
+
+			// linkを格納する配列
+			let links = [];
+
+			// キャンバス
+			const map = document.getElementById("map");
+
+			// オーバーレイ
+			const overlay = document.getElementById("overlay");
+
+			// 経度緯度とXY座標を変換
+			function coordToXY(lon, lat) {
+				return [(lon - 139.694) / 0.008 * 3478, (35.665 - lat) / 0.007 * 3011];
+			}
+
+			function xyToCoord(x, y) {
+				return [x / 3478 * 0.008 + 139.694, -y / 3011 * 0.007 + 35.665];
+			}
+
+			function displayLine(id, x1, y1, x2, y2, width) {
+
+				// 点(x1, y1)から(x2, y2)までの角度を求める
+				const angle = Math.atan2(y2 - y1, x2 - x1);
+				// 点(x1, y1)から(x2, y2)までの距離を求める
+				const distance = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+				// 点(x1, y1)から(x2, y2)までの中点を求める
+				const midX = (x1 + x2) / 2;
+				const midY = (y1 + y2) / 2;
+
+				// div要素を作成
+				const lineElem = document.createElement("div");
+				lineElem.nodeId = id;
+				// div要素にクラスを追加
+				lineElem.classList.add("line");
+				// div要素のサイズを設定
+				lineElem.style.width = `${distance}px`;
+				lineElem.style.height = `${width / scale}px`;
+				lineElem.style.borderRadius = `${width / scale / 2}px`;
+				// div要素の位置を設定
+				lineElem.style.top = `${midY}px`;
+				lineElem.style.left = `${midX}px`;
+				// div要素の角度を設定
+				lineElem.style.transform = `translate(-50%, -50%) rotate(${angle}rad)`;
+
+				// div要素をクリックしたときの処理
+				lineElem.addEventListener("click", (e) => {
+					let width = links[lineElem.nodeId][3];
+					if (width > 12) {
+						width = 1;
+					} else {
+						width++;
+					}
+					lineElem.style.height = `${width / scale}px`;
+					lineElem.style.borderRadius = `${width / scale / 2}px`;
+					links[lineElem.nodeId][3] = width;
+				});
+
+				// overlayにdiv要素を追加
+				overlay.appendChild(lineElem);
+
+			}
+
+
+			// CSVを読み込む
+			const input = document.getElementById("upload-file");
+			input.addEventListener("change", (e) => {
+				const file = e.target.files[0]
+				const reader = new FileReader();
+				reader.onload = () => {
+					links = [];
+					let csvLines = reader.result.split("\n");
+					for (let i = 0; i < csvLines.length; i++) {
+						if (!csvLines[i]) {
+							continue;
+						}
+						let link = csvLines[i].split(",");
+						links.push(link);
+						const node0 = nodes[link[1]];
+						const node1 = nodes[link[2]];
+						displayLine(link[0], ...coordToXY(node0[1], node0[2]), ...coordToXY(node1[1], node1[2]), link[3]);
+					}
+				}
+				reader.readAsText(file);
+			});
+
+			
+
+			// CSVにて書き出し
+			function exportData() {
+				let csv = links.map((link) => link.join(",")).join("\n");
+				let title = prompt("題名を入力してください", "links-with-width");
+				let blob = new Blob([csv], {type: "text/csv"});
+				let linkObj = document.createElement("a");
+				linkObj.href = URL.createObjectURL(blob);
+				linkObj.download = `${title}_${(new Date()).getTime()}.csv`;
+				linkObj.click();
+			}
+
+		</script>
+	</body>
+</html>

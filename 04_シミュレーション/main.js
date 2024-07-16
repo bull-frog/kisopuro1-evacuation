@@ -62,8 +62,14 @@ let totalPopulationInNodes = nodeSituations.totalPopulationInNodes;
 let peopleMovingStatusInNodes = nodeSituations.peopleMovingStatusInNodes;
 let nodeIsStacked = nodeSituations.nodeIsStacked;
 
+
+
+// シミュレーションの記録を格納する配列などはここで初期化すべし
+
+
+
 // タイムステップの実行
-for (let t = 0; t < 100; t++) {
+for (let t = 0; t < 200; t++) {
 
 	// 時刻を表示
 	console.log(`~~~ 避難開始から ${(t * timeInterval / 60).toFixed(1)} 分 ~~~`);
@@ -82,13 +88,13 @@ for (let t = 0; t < 100; t++) {
 	peopleMovingStatusInNodes = nodeSituations.peopleMovingStatusInNodes;
 	nodeIsStacked = nodeSituations.nodeIsStacked;
 
-	// それぞれの交差点が詰まっていないか表示
-	// console.log(nodeIsStacked);
-
 	// いくつかのエージェントの情報を表示
 	[0, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000].forEach(i => {
 		const agent = agents[i];
 		console.log(`Agent${i} is at ${agent.currentStreetNumber != -1 ? "link" + agent.currentStreetNumber : "node" + agent.currentNodeNumber} and is ${agent.isStacked ? "stacked" : "moving to node" + agent.nextNodeNumber}`);
 	});
+
+	// シミュレーションの記録を格納すべし
+	
 
 }
