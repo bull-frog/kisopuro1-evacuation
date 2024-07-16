@@ -73,11 +73,7 @@ exports.Agent = class Agent {
 			
 			// 次に向かう交差点を決定
 			this.nextNodeNumber = routes[this.finalDestination][this.currentNodeNumber];
-			if (this.nextNodeNumber === -1) {
-				console.log(`Next point from node${this.currentNodeNumber} to node${this.finalDestination} is -1`);
-			}
 			let nextLink = linksFromNodes[this.currentNodeNumber].find(link => link.destination === this.nextNodeNumber);
-
 			if (!nextLink) {
 				console.log(`Agent${this.id} cannot find the next link from node${this.currentNodeNumber} to node${this.nextNodeNumber}`);
 			}

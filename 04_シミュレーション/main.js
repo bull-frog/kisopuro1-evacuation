@@ -56,7 +56,11 @@ let streetSituations = Street.updateAgentsInStreets(agents, linksWithDistances);
 let agentsInStreets = streetSituations.agentsInStreets;
 let populationDensityInStreets = streetSituations.populationDensityInStreets;
 let peopleMovingStatusInStreets = streetSituations.peopleMovingStatusInStreets;
-let agentsInNodes, totalPopulationInNodes, peopleMovingStatusInNodes, nodeIsStacked = Street.updateAgentsInNodes(agents, nodes);
+let nodeSituations = Street.updateAgentsInNodes(agents, nodes);
+let agentsInNodes = nodeSituations.agentsInNodes;
+let totalPopulationInNodes = nodeSituations.totalPopulationInNodes;
+let peopleMovingStatusInNodes = nodeSituations.peopleMovingStatusInNodes;
+let nodeIsStacked = nodeSituations.nodeIsStacked;
 
 // タイムステップの実行
 for (let t = 0; t < 100; t++) {
@@ -68,8 +72,18 @@ for (let t = 0; t < 100; t++) {
 	agents.forEach(agent => agent.timestep(routes, linksWithDistances, linksFromNodes, peopleMovingStatusInStreets, populationDensityInStreets, peopleMovingStatusInNodes, nodeIsStacked));
 
 	// 状態変数を更新
-	agentsInStreets, populationDensityInStreets, peopleMovingStatusInStreets = Street.updateAgentsInStreets(agents, linksWithDistances);
-	agentsInNodes, totalPopulationInNodes, peopleMovingStatusInNodes, nodeIsStacked = Street.updateAgentsInNodes(agents, nodes);
+	streetSituations = Street.updateAgentsInStreets(agents, linksWithDistances);
+	agentsInStreets = streetSituations.agentsInStreets;
+	populationDensityInStreets = streetSituations.populationDensityInStreets;
+	peopleMovingStatusInStreets = streetSituations.peopleMovingStatusInStreets;
+	nodeSituations = Street.updateAgentsInNodes(agents, nodes);
+	agentsInNodes = nodeSituations.agentsInNodes;
+	totalPopulationInNodes = nodeSituations.totalPopulationInNodes;
+	peopleMovingStatusInNodes = nodeSituations.peopleMovingStatusInNodes;
+	nodeIsStacked = nodeSituations.nodeIsStacked;
+
+	// それぞれの交差点が詰まっていないか表示
+	// console.log(nodeIsStacked);
 
 	// いくつかのエージェントの情報を表示
 	[0, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000].forEach(i => {
