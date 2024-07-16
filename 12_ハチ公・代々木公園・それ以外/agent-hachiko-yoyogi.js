@@ -65,6 +65,7 @@ exports.Agent = class Agent {
 
 		// エージェントが目的地に到着した場合
 		if (this.currentNodeNumber === this.finalDestination) {
+			this.isStacked = false;
 			return;
 		}
 
@@ -76,6 +77,17 @@ exports.Agent = class Agent {
 			let nextLink = linksFromNodes[this.currentNodeNumber].find(link => link.destination === this.nextNodeNumber);
 			if (!nextLink) {
 				console.log(`Agent${this.id} cannot find the next link from node${this.currentNodeNumber} to node${this.nextNodeNumber}`);
+			}
+
+			// もし、すでにスタックしている場合は、ランダムに隣の交差点を目指す
+			if (this.isStacked) {
+				const nextNodeCandidates = linksFromNodes[this.currentNodeNumber].filter(link => !nodeIsStacked[link.destination] && (!capacity.find(node => node.nodeId === link.destination) || totalPopulationInNodes.find(node => node.nodeId === link.destination) < capacity.find(node => node.nodeId === link.destination).capacity));
+				if (nextNodeCandidates.length === 0) {
+					this.isStacked = true;
+					return;
+				}
+				this.nextNodeNumber = nextNodeCandidates[Math.floor(Math.random() * nextNodeCandidates.length)].destination;
+				nextLink = linksFromNodes[this.currentNodeNumber].find(link => link.destination === this.nextNodeNumber);
 			}
 
 			if (populationDensityInStreets[nextLink.linkId] <= 6) {
@@ -173,19 +185,22 @@ exports.generateAgents = function(linksWithDistances, routes, distances) {
 	const totalPopulation = 50000;
 
 	// ハチ公に向かう人の割合を設定
-	const ratioOfHachiko = 0.2;
+	const ratioOfHachiko = 0;
 
 	linksWithDistances.forEach((link, index) => {
-		let nearestEntranceToYoyogiPark;
-		let upperNode = linksWithDistances[link].startNodeId;
+		if (index.upperNode == 122 || index.upperNode == 131 || index.upperNode == 187 || index.lowerNode == 122 || index.lowerNode == 131 || index.lowerNode == 187) {
+			return;
+		}
+		let upperNode = link.startNodeId;
 		let distanceToNode131 = distances[upperNode][131];
 		let distanceToNode122 = distances[upperNode][122];
+		let nearestEntranceToYoyogiPark = distanceToNode131 < distanceToNode122 ? 131 : 122;
 		const numberOfAgents = Math.round(totalPopulation * link.distance / totalDistanceOfLinks);
 		for (let i = 0; i < numberOfAgents; i++) {
 			if (Math.random() < ratioOfHachiko) {
 				agents.push(new exports.Agent(agents.length, 20, index, Math.random(), 187, Math.round(Math.random() + 1), routes, linksWithDistances));
 			} else {
-				agents.push(new exports.Agent(agents.length, 20, index, Math.random(), (distanceToNode131 < distanceToNode122 ? 131 : 122), Math.round(Math.random() + 1), routes, linksWithDistances));
+				agents.push(new exports.Agent(agents.length, 20, index, Math.random(), nearestEntranceToYoyogiPark, Math.round(Math.random() + 1), routes, linksWithDistances));
 			}
 		}
 	});

@@ -101,10 +101,10 @@ for (let t = 0; t < 200; t++) {
 	nodeIsStacked = nodeSituations.nodeIsStacked;
 
 	// いくつかのエージェントの情報を表示
-	// [0, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000].forEach(i => {
-	// 	const agent = agents[i];
-	// 	console.log(`Agent${i} is at ${agent.currentStreetNumber != -1 ? "link" + agent.currentStreetNumber : "node" + agent.currentNodeNumber} and is ${agent.isStacked ? "stacked" : "moving to node" + agent.nextNodeNumber}`);
-	// });
+	[0, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000].forEach(i => {
+		const agent = agents[i];
+		console.log(`Agent${i} is at ${agent.currentStreetNumber != -1 ? "link" + agent.currentStreetNumber : "node" + agent.currentNodeNumber} and is ${agent.isStacked ? "stacked" : "moving to node" + agent.nextNodeNumber}. Final destination is node${agent.finalDestination}.`);
+	});
 
 	// 秒を時刻に変換する
 	if (t % 12 !== 0) continue;
@@ -119,4 +119,4 @@ for (let t = 0; t < 200; t++) {
 
 // シミュレーションの記録を出力する
 const csv = streetDensity.map(row => `${row[0]},${row[1]},${row[2]},${row[3]},${row[4]},"${row[5]}",${row[6]}`).join("\n");
-fs.writeFileSync("restrictHachiko_streetDensity.csv", "time,linkId,startId,endId,width,wkt,populationDensity\n" + csv);
+fs.writeFileSync("hachiko-00.csv", "time,linkId,startId,endId,width,wkt,populationDensity\n" + csv);
