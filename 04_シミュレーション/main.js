@@ -50,3 +50,28 @@ for (let i = 0; i < nodes.length; i++) {
 // エージェントの初期化
 let agents = [];
 generateAgents(agents, linksWithDistances, routes);
+
+// 状態変数の定義
+let agentsInStreets, populationDensityInStreets, peopleMovingStatusInStreets = Street.updateAgentsInStreets(agents, linksWithDistances);
+let agentsInNodes, totalPopulationInNodes, peopleMovingStatusInNodes, nodeIsStacked = Street.updateAgentsInNodes(agents, nodes);
+
+// タイムステップの実行
+for (let t = 0; t < 100; t++) {
+
+	// 時刻を表示
+	console.log(`~~~ 避難開始から ${(t * timestep / 60).toFixed(1)} 分 ~~~`);
+
+	// エージェントを動かす
+	agents.forEach(agent => agent.timestep(routes, linksWithDistances, linksFromNodes, peopleMovingStatusInStreets, populationDensityInStreets, peopleMovingStatusInNodes, nodeIsStacked));
+
+	// 状態変数を更新
+	agentsInStreets, populationDensityInStreets, peopleMovingStatusInStreets = Street.updateAgentsInStreets(agents, linksWithDistances);
+	agentsInNodes, totalPopulationInNodes, peopleMovingStatusInNodes, nodeIsStacked = Street.updateAgentsInNodes(agents, nodes);
+
+	// いくつかのエージェントの情報を表示
+	[0, 10000, 20000, 30000, 40000].forEach(i => {
+		const agent = agents[i];
+		console.log(`Agent${i} is at ${agent.currentStreetNumber != -1 ? "link" + agent.currentStreetNumber : "node" + agent.currentNodeNumber} and is ${agent.isStacked ? "stacked" : "moving to node" + agent.nextNodeNumber}`);
+	});
+
+}

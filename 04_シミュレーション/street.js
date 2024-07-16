@@ -39,12 +39,11 @@ exports.updateAgentsInStreets = function(agents, linksWithDistances) {
 
 
 /**
- * Agentのリストを受け取り、agentsInNodes, totalPopulationInNodes, peopleMovingStatusInNodes を更新する
+ * Agentのリストを受け取り、agentsInNodes, totalPopulationInNodes, peopleMovingStatusInNodes, nodeIsStacked を更新する
  * @param {Array<Agent>} agents 
  * @param {Array<LinkWithDistance>} linksWithDistances
 */
 exports.updateAgentsInNodes = function(agents, nodes) {
-
 
 	let agentsInNodes = agents.reduce((acc, agent) => {
 		if (!acc[agent.currentNodeNumber]) {
@@ -69,9 +68,13 @@ exports.updateAgentsInNodes = function(agents, nodes) {
 		return Object.entries(nextNodeCounts).map(([to, count]) => ({ to: Number(to), ratio: count / agentIds.length }));
 	});
 
+	// isStackedプロパティがtrueであるエージェントが存在するnodeをtrue,そうでないnodeをfalseとする
+	let nodeIsStacked = agentsInNodes.map(agentIds => agentIds.some(agentId => agents[agentId].isStacked));
+
 	return {
 		agentsInNodes: agentsInNodes,
 		totalPopulationInNodes: totalPopulationInNodes,
-		peopleMovingStatusInNodes: peopleMovingStatusInNodes
+		peopleMovingStatusInNodes: peopleMovingStatusInNodes,
+		nodeIsStacked: nodeIsStacked
 	};
 }

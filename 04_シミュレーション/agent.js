@@ -28,6 +28,8 @@ exports.Agent = class Agent {
 		this.currentPositionOnStreet = initialPositionOnStreet;
 		this.finalDestination = finalDestination;
 		this.familiarityWithShibuya = familiarityWithShibuya;
+		this.walkingDistancePerHour = 4000; // 通常の歩行速度（m/h）
+		this.isStacked = false; // 前が詰まっていて進めない場合はtrueにする
 
 		/**
 		 * エージェントが交差点にいるときは、その交差点のID。いないときは-1
@@ -59,40 +61,71 @@ exports.Agent = class Agent {
 	/**
 	 * タイムステップごとに行う処理
 	 */
-	timestep(routes, linksWithDistances, linksFromNodes) {
+	timestep(routes, linksWithDistances, linksFromNodes, peopleMovingStatusInStreets, populationDensityInStreets, peopleMovingStatusInNodes, nodeIsStacked) {
+
+		// エージェントが目的地に到着した場合
+		if (this.currentNodeNumber === this.finalDestination) {
+			return;
+		}
 
 		// エージェントが交差点にいる場合
 		if (this.currentNodeNumber != -1) {
 			
 			// 次に向かう交差点を決定
 			this.nextNodeNumber = routes[this.finalDestination][this.currentNodeNumber];
-
-			// 次に向かう交差点が決まったら、道に移動。
 			let nextLink = linksFromNodes[this.currentNodeNumber].find(link => link.destination === this.nextNodeNumber);
-			this.currentStreetNumber = nextLink.linkId;
-			this.currentPositionOnStreet = nextLink.up ? 1 : 0;
-			this.walkDirection = nextLink.up ? -1 : 1;
-			this.currentNodeNumber = -1;
+
+			if (populationDensityInStreets[nextLink.linkId] <= 6) {
+				// 次に向かう道の人口密度が6人/m^2以下の場合は、道に移動。
+				this.isStacked = false;
+				this.currentStreetNumber = nextLink.linkId;
+				this.currentPositionOnStreet = nextLink.up ? 1 : 0;
+				this.walkDirection = nextLink.up ? -1 : 1;
+				this.currentNodeNumber = -1;
+			} else {
+				// 次に向かう道の人口密度が6人/m^2を超える場合は、交差点に留まる。
+				this.isStacked = true;
+			}
 
 		}
 		// エージェントが道にいる場合
 		else if (this.currentStreetNumber != -1) {
 
-			// 1時間あたりの歩く距離（m）
-			// ToDo: 密度や年齢に応じて歩く速度を変える
-			let walkingDistancePerHour = 3000;
-
 			// linksWithDistancesから、今いる道の長さを取得する
 			const currentStreetLength = linksWithDistances[this.currentStreetNumber].distance;
+
+			/*
+			 * 道の密度によって、歩く速度を変える。密度と速度の関係は、
+			 * https://www.bousai.go.jp/kaigirep/chuobou/senmon/shutohinan/10/
+			 * で与えられる通りとする。
+			 * 双方向流を考慮するには至っていない
+			 */
+			// 道にいる場合、今いる道の密度を取得
+			if (!this.currentStreetNumber !== -1) {
+				const currentStreetPopulationDensity = populationDensityInStreets[this.currentStreetNumber];
+				if (currentStreetPopulationDensity < 1.5) {
+					this.walkingDistancePerHour = 4000;
+				} else if (currentStreetPopulationDensity < 6) {
+					this.walkingDistancePerHour = 5200 - 800 * currentStreetPopulationDensity;
+				} else if (currentStreetPopulationDensity < 1.5) {
+					this.walkingDistancePerHour = 2400 / currentStreetPopulationDensity;
+				} else {
+					this.walkingDistancePerHour = 1000;
+				}
+			}
 
 			// timeInterval(s)ごとに、currentPositionOnStreetを増減する
 			this.currentPositionOnStreet += (walkingDistancePerHour / 3600 * timeInterval / currentStreetLength * this.walkDirection);
 
-			// currentPositionOnStreetが(0,1)を出たら、交差点に移動したものと判断する
-			if (this.currentPositionOnStreet <= 0 || this.currentPositionOnStreet >= 1) {
+			// currentPositionOnStreetが(0,1)を出たら、交差点に移動したものと判断する。ただし、移動先の交差点にisStackedがtrueであるエージェントが存在する場合は、移動しない。
+			if ((this.currentPositionOnStreet <= 0 || this.currentPositionOnStreet >= 1) && !nodeIsStacked[this.nextNodeNumber]) {
+				this.isStacked = false;
 				this.currentNodeNumber = this.nextNodeNumber;
 				this.nextNodeNumber = -1;
 				this.currentStreetNumber = -1;
+			} else {
+				this.isStacked = true;
+				this.walkingDistancePerHour = 0;
 			}
 
 		}
@@ -110,7 +143,10 @@ exports.Agent = class Agent {
 			currentNodeNumber: this.currentNodeNumber,
 			nextNodeNumber: this.nextNodeNumber,
 			finalDestination: this.finalDestination,
-			familiarityWithShibuya: this.familiarityWithShibuya
+			familiarityWithShibuya: this.familiarityWithShibuya,
+			walkingDistancePerHour: this.walkingDistancePerHour,
+			isStacked: this.isStacked,
+			walkDirection: this.walkDirection
 		};
 	}
 	
