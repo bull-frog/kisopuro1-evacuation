@@ -76,7 +76,7 @@ for (let t = 0; t < 200; t++) {
 	console.log(`~~~ 避難開始から ${(t * timeInterval / 60).toFixed(1)} 分 ~~~`);
 
 	// エージェントを動かす
-	agents.forEach(agent => agent.timestep(routes, linksWithDistances, linksFromNodes, peopleMovingStatusInStreets, populationDensityInStreets, peopleMovingStatusInNodes, nodeIsStacked));
+	agents.forEach(agent => agent.timestep(routes, linksWithDistances, linksFromNodes, peopleMovingStatusInStreets, populationDensityInStreets, peopleMovingStatusInNodes, totalPopulationInNodes, nodeIsStacked, [])); // capacityは無限とした
 
 	// 状態変数を更新
 	streetSituations = Street.updateAgentsInStreets(agents, linksWithDistances);

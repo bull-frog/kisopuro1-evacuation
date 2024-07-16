@@ -61,7 +61,7 @@ exports.Agent = class Agent {
 	/**
 	 * タイムステップごとに行う処理
 	 */
-	timestep(routes, linksWithDistances, linksFromNodes, peopleMovingStatusInStreets, populationDensityInStreets, peopleMovingStatusInNodes, nodeIsStacked) {
+	timestep(routes, linksWithDistances, linksFromNodes, peopleMovingStatusInStreets, populationDensityInStreets, peopleMovingStatusInNodes, totalPopulationInNodes, nodeIsStacked, capacity) {
 
 		// エージェントが目的地に到着した場合
 		if (this.currentNodeNumber === this.finalDestination) {
@@ -120,8 +120,8 @@ exports.Agent = class Agent {
 			// timeInterval(s)ごとに、currentPositionOnStreetを増減する
 			this.currentPositionOnStreet += (this.walkingDistancePerHour / 3600 * timeInterval / currentStreetLength * this.walkDirection);
 
-			// currentPositionOnStreetが(0,1)を出たら、交差点に移動したものと判断する。ただし、移動先の交差点にisStackedがtrueであるエージェントが存在する場合は、移動しない。
-			if ((this.currentPositionOnStreet <= 0 || this.currentPositionOnStreet >= 1) && !nodeIsStacked[this.nextNodeNumber]) {
+			// currentPositionOnStreetが(0,1)を出たら、交差点に移動したものと判断する。ただし、移動先の交差点にisStackedがtrueであるエージェントが存在する場合または、そのノードにいる人数がcapacityに達している場合は、移動しない。
+			if ((this.currentPositionOnStreet <= 0 || this.currentPositionOnStreet >= 1) && !nodeIsStacked[this.nextNodeNumber] && (!capacity.find(node => node.nodeId === this.nextNodeNumber) || totalPopulationInNodes.find(node => node.nodeId === this.nextNodeNumber) < capacity.find(node => node.nodeId === this.nextNodeNumber).capacity)) {
 				this.isStacked = false;
 				this.currentNodeNumber = this.nextNodeNumber;
 				this.nextNodeNumber = -1;

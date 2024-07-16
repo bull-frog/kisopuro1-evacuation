@@ -8,6 +8,7 @@ const Agent = require("./agent").Agent;
 const generateAgents = require("./agent").generateAgents;
 const Street = require("./street");
 const fs = require("fs");
+const capacity = require("./node-capacity");
 
 const timeInterval = 10; // シミュレーションの時間間隔 (s)
 
@@ -76,7 +77,7 @@ for (let t = 0; t < 200; t++) {
 	console.log(`~~~ 避難開始から ${(t * timeInterval / 60).toFixed(1)} 分 ~~~`);
 
 	// エージェントを動かす
-	agents.forEach(agent => agent.timestep(routes, linksWithDistances, linksFromNodes, peopleMovingStatusInStreets, populationDensityInStreets, peopleMovingStatusInNodes, totalPopulationInNodes, nodeIsStacked, [])); // capacityは無限とした
+	agents.forEach(agent => agent.timestep(routes, linksWithDistances, linksFromNodes, peopleMovingStatusInStreets, populationDensityInStreets, peopleMovingStatusInNodes, totalPopulationInNodes, nodeIsStacked, capacity));
 
 	// 状態変数を更新
 	streetSituations = Street.updateAgentsInStreets(agents, linksWithDistances);
@@ -108,4 +109,4 @@ for (let t = 0; t < 200; t++) {
 
 // シミュレーションの記録を出力する
 const csv = streetDensity.map(row => `${row[0]},${row[1]},${row[2]},${row[3]},${row[4]},"${row[5]}",${row[6]}`).join("\n");
-fs.writeFileSync("streetDensity.csv", "time,linkId,startId,endId,width,wkt,populationDensity\n" + csv);
+fs.writeFileSync("restrictHachiko_streetDensity.csv", "time,linkId,startId,endId,width,wkt,populationDensity\n" + csv);
