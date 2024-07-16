@@ -8,18 +8,20 @@ const Agent = require("./agent").Agent;
 const generateAgents = require("./agent").generateAgents;
 const Street = require("./street");
 
+const timeInterval = 10; // シミュレーションの時間間隔 (s)
+
 
 // ノード・リンクのデータを読み込み、前処理を行う
 
 /**
- * @typedef {[id: number, startId: number, endId: number, width: number]} Link
+ * @typedef {[id: number, startId: number, endId: number, width: number, wkt: string]} Link
  * @type {Array<Link>}
  */
-const links = loadCSV("links-with-width.csv", 0);
+const links = loadCSV("links-with-width-wkt.csv", 0);
 
 /**
  * @typedef {[id: number, lon: number, lat: number]} Node
- * @type {Array<Node}
+ * @type {Array<Node>}
  */
 const nodes = loadCSV("nodes.csv", 0);
 
@@ -46,20 +48,21 @@ for (let i = 0; i < nodes.length; i++) {
 	routes.push(dijkstra(linksWithDistances, nodes.length, i).nextPointOnRoute);
 }
 
-
 // エージェントの初期化
-let agents = [];
-generateAgents(agents, linksWithDistances, routes);
+let agents = generateAgents(linksWithDistances, routes);
 
 // 状態変数の定義
-let agentsInStreets, populationDensityInStreets, peopleMovingStatusInStreets = Street.updateAgentsInStreets(agents, linksWithDistances);
+let streetSituations = Street.updateAgentsInStreets(agents, linksWithDistances);
+let agentsInStreets = streetSituations.agentsInStreets;
+let populationDensityInStreets = streetSituations.populationDensityInStreets;
+let peopleMovingStatusInStreets = streetSituations.peopleMovingStatusInStreets;
 let agentsInNodes, totalPopulationInNodes, peopleMovingStatusInNodes, nodeIsStacked = Street.updateAgentsInNodes(agents, nodes);
 
 // タイムステップの実行
 for (let t = 0; t < 100; t++) {
 
 	// 時刻を表示
-	console.log(`~~~ 避難開始から ${(t * timestep / 60).toFixed(1)} 分 ~~~`);
+	console.log(`~~~ 避難開始から ${(t * timeInterval / 60).toFixed(1)} 分 ~~~`);
 
 	// エージェントを動かす
 	agents.forEach(agent => agent.timestep(routes, linksWithDistances, linksFromNodes, peopleMovingStatusInStreets, populationDensityInStreets, peopleMovingStatusInNodes, nodeIsStacked));
@@ -69,7 +72,7 @@ for (let t = 0; t < 100; t++) {
 	agentsInNodes, totalPopulationInNodes, peopleMovingStatusInNodes, nodeIsStacked = Street.updateAgentsInNodes(agents, nodes);
 
 	// いくつかのエージェントの情報を表示
-	[0, 10000, 20000, 30000, 40000].forEach(i => {
+	[0, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000].forEach(i => {
 		const agent = agents[i];
 		console.log(`Agent${i} is at ${agent.currentStreetNumber != -1 ? "link" + agent.currentStreetNumber : "node" + agent.currentNodeNumber} and is ${agent.isStacked ? "stacked" : "moving to node" + agent.nextNodeNumber}`);
 	});

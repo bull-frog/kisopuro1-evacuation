@@ -1,4 +1,5 @@
 const fs = require('fs');
+const dijkstra = require('./dijkstra');
 
 /**
  * UTF-8形式のCSVファイルを読み込み、二次元配列を返す

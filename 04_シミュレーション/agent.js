@@ -73,7 +73,14 @@ exports.Agent = class Agent {
 			
 			// 次に向かう交差点を決定
 			this.nextNodeNumber = routes[this.finalDestination][this.currentNodeNumber];
+			if (this.nextNodeNumber === -1) {
+				console.log(`Next point from node${this.currentNodeNumber} to node${this.finalDestination} is -1`);
+			}
 			let nextLink = linksFromNodes[this.currentNodeNumber].find(link => link.destination === this.nextNodeNumber);
+
+			if (!nextLink) {
+				console.log(`Agent${this.id} cannot find the next link from node${this.currentNodeNumber} to node${this.nextNodeNumber}`);
+			}
 
 			if (populationDensityInStreets[nextLink.linkId] <= 6) {
 				// 次に向かう道の人口密度が6人/m^2以下の場合は、道に移動。
@@ -115,7 +122,7 @@ exports.Agent = class Agent {
 			}
 
 			// timeInterval(s)ごとに、currentPositionOnStreetを増減する
-			this.currentPositionOnStreet += (walkingDistancePerHour / 3600 * timeInterval / currentStreetLength * this.walkDirection);
+			this.currentPositionOnStreet += (this.walkingDistancePerHour / 3600 * timeInterval / currentStreetLength * this.walkDirection);
 
 			// currentPositionOnStreetが(0,1)を出たら、交差点に移動したものと判断する。ただし、移動先の交差点にisStackedがtrueであるエージェントが存在する場合は、移動しない。
 			if ((this.currentPositionOnStreet <= 0 || this.currentPositionOnStreet >= 1) && !nodeIsStacked[this.nextNodeNumber]) {
@@ -160,10 +167,10 @@ exports.Agent = class Agent {
  * @param {Array<{id: number, startNodeId: number, endNodeId: number, distance: number, width: number}>} linksWithDistances リンクの情報 (id, startNodeId, endNodeId, length, width)
  * @param {Array<Array<Number>>} routes ダイクストラ法で得られた経路情報
  */
-exports.generateAgents = function(agents, linksWithDistances, routes) {
+exports.generateAgents = function(linksWithDistances, routes) {
 
 	// agentsを初期化
-	agents = [];
+	let agents = [];
 
 	// とりあえず、道の長さに従って等密度で分布させる。目的地も仮に、全員がハチ公前（ID: 187）に向かうものとする。
 	const totalDistanceOfLinks = linksWithDistances.reduce((acc, link) => acc + link.distance, 0);
@@ -174,7 +181,8 @@ exports.generateAgents = function(agents, linksWithDistances, routes) {
 		for (let i = 0; i < numberOfAgents; i++) {
 			agents.push(new exports.Agent(agents.length, 20, index, Math.random(), 187, Math.round(Math.random() + 1), routes, linksWithDistances));
 		}
-	}
+	});
 
+	return agents
 
 }

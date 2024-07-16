@@ -15,19 +15,16 @@ exports.updateAgentsInStreets = function(agents, linksWithDistances) {
 		return acc;
 	}, linksWithDistances.map(() => []));
 
-	let populationDensityInStreets = agentsInStreets.map((agents, index) => agents.length / linksWithDistances[index][2]);
+	let populationDensityInStreets = agentsInStreets.map((agents, index) => agents.length / linksWithDistances[index].distance / linksWithDistances[index].width);
 
 	let peopleMovingStatusInStreets = agentsInStreets.map((agentIds, index) => {
-		const upperNode = linksWithDistances[index][0];
-		const lowerNode = linksWithDistances[index][1];
-		const upperNodePopulation = agentIds.filter(agentId => agents[agentId].nextNodeNumber === upperNode).length;
-		const lowerNodePopulation = agentIds.filter(agentId => agents[agentId].nextNodeNumber === lowerNode).length;
+		const upperNode = linksWithDistances[index].startNodeId;
+		const lowerNode = linksWithDistances[index].endNodeId;
+		const upperNodePopulation = agentIds.filter(agentId => agents[agentId].nextNodeNumber === upperNode && !agents[agentId].isStacked).length;
+		const lowerNodePopulation = agentIds.filter(agentId => agents[agentId].nextNodeNumber === lowerNode && !agents[agentId].isStacked).length;
 		const stoppingPopulation = agentIds.length - upperNodePopulation - lowerNodePopulation;
 		return { up: upperNodePopulation / agentIds.length, down: lowerNodePopulation / agentIds.length, stopping: stoppingPopulation / agentIds.length };
 	});
-
-	console.log(populationDensityInStreets);
-	console.log(peopleMovingStatusInStreets)
 
 	return {
 		agentsInStreets: agentsInStreets,
